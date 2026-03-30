@@ -50,4 +50,4 @@ jobs:
 
       - name: Run Newman
         run: |
-          npx newman run collection.json --bail
+          npx newman run collection.json --bail --env-var base_url=http://localhost:3000
