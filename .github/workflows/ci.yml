@@ -9,33 +9,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 📥 Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ⚙️ Setup Node
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # 📦 Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # 🔥 Start server
+      # 🚀 Start server (chạy background)
       - name: Start server
-        run: npm start &
+        run: |
+          nohup npm start > server.log 2>&1 &
 
-      # ⏳ Wait for server
-      - name: Wait for server
-        run: npx wait-on http://localhost:3000
+      # ⏳ Chờ server khởi động
+      - name: Wait for server (sleep)
+        run: sleep 5
 
-      # 📥 Fetch Postman collection from cloud
+      # 🔍 Debug (rất hữu ích nếu fail)
+      - name: Debug server
+        run: |
+          echo "=== SERVER LOG ==="
+          cat server.log || true
+          echo "=== CURL TEST ==="
+          curl http://localhost:3000 || true
+          echo "=== PROCESS LIST ==="
+          ps aux | grep node
+
+      # 📥 Download Postman collection từ cloud
       - name: Download Postman collection
         run: |
           curl -X GET "https://api.getpostman.com/collections/{{COLLECTION_UID}}" \
           -H "X-Api-Key: ${{ secrets.POSTMAN_API_KEY }}" \
           > collection.json
 
-      # 🧪 Run tests
+      # 🧪 Run test bằng Newman
       - name: Run Newman
         run: |
           npx newman run collection.json
