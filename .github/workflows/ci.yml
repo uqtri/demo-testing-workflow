@@ -8,48 +8,38 @@ jobs:
   api-test:
     runs-on: ubuntu-latest
 
+    env:
+      POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+      COLLECTION_UID: ${{ secrets.COLLECTION_UID }}
+
     steps:
-      # 📥 Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ⚙️ Setup Node
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 📦 Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # 🚀 Start server (chạy background)
+      - name: Install wait-on
+        run: npm install -g wait-on
+
       - name: Start server
         run: |
           nohup npm start > server.log 2>&1 &
 
-      # ⏳ Chờ server khởi động
-      - name: Wait for server (sleep)
-        run: sleep 5
+      - name: Wait for server
+        run: wait-on http://localhost:3000
 
-      # 🔍 Debug (rất hữu ích nếu fail)
-      - name: Debug server
-        run: |
-          echo "=== SERVER LOG ==="
-          cat server.log || true
-          echo "=== CURL TEST ==="
-          curl http://localhost:3000 || true
-          echo "=== PROCESS LIST ==="
-          ps aux | grep node
-
-      # 📥 Download Postman collection từ cloud
       - name: Download Postman collection
         run: |
-          curl -X GET "https://api.getpostman.com/collections/${{secrets.COLLECTION_UID}}" \
-          -H "X-Api-Key: ${{ secrets.POSTMAN_API_KEY }}" \
-          > collection.json
+          curl -X GET "https://api.getpostman.com/collections/$COLLECTION_UID" \
+          -H "X-Api-Key: $POSTMAN_API_KEY" \
+          -o collection.json
 
-      # 🧪 Run test bằng Newman
       - name: Run Newman
         run: |
-          npx newman run collection.json
+          npx newman run collection.json --bail
