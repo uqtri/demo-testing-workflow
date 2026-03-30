@@ -2,13 +2,12 @@ name: API Test (Postman Cloud)
 
 on:
 push:
-branches: [ main ]
+branches: [main]
 
 jobs:
 test:
 runs-on: ubuntu-latest
 
-```
 steps:
   - name: Checkout code
     uses: actions/checkout@v3
@@ -27,7 +26,7 @@ steps:
   - name: Start server
     run: |
       node index.js &
-  
+
   # 4. Wait until server is ready (better than sleep)
   - name: Wait for server
     run: |
