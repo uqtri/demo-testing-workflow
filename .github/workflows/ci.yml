@@ -45,7 +45,7 @@ jobs:
       # 📥 Download Postman collection từ cloud
       - name: Download Postman collection
         run: |
-          curl -X GET "https://api.getpostman.com/collections/{{COLLECTION_UID}}" \
+          curl -X GET "https://api.getpostman.com/collections/{{secrets.COLLECTION_UID}}" \
           -H "X-Api-Key: ${{ secrets.POSTMAN_API_KEY }}" \
           > collection.json
 
