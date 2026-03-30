@@ -1,49 +1,41 @@
-name: API Test (Postman Cloud)
+name: API Test from Postman Cloud
 
 on:
-push:
-branches: [main]
+  push:
+    branches: [main]
 
 jobs:
-test:
-runs-on: ubuntu-latest
+  api-test:
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  # 1. Install Node (needed for your server + newman)
-  - name: Setup Node
-    uses: actions/setup-node@v3
-    with:
-      node-version: 18
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-  # 2. Install dependencies (your auth app)
-  - name: Install dependencies
-    run: npm install
+      - name: Install dependencies
+        run: npm install
 
-  # 3. Start server in background
-  - name: Start server
-    run: |
-      node index.js &
+      # 🔥 Start server
+      - name: Start server
+        run: npm start &
 
-  # 4. Wait until server is ready (better than sleep)
-  - name: Wait for server
-    run: |
-      npx wait-on http://localhost:3000
+      # ⏳ Wait for server
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000
 
-  # 5. Install Newman
-  - name: Install Newman
-    run: npm install -g newman
+      # 📥 Fetch Postman collection from cloud
+      - name: Download Postman collection
+        run: |
+          curl -X GET "https://api.getpostman.com/collections/{{COLLECTION_UID}}" \
+          -H "X-Api-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+          > collection.json
 
-  # 6. Fetch collection from Postman Cloud
-  - name: Download Postman collection
-    run: |
-      curl --location \
-        --request GET "https://api.getpostman.com/collections/${{ secrets.POSTMAN_COLLECTION_UID }}" \
-        --header "X-Api-Key: ${{ secrets.POSTMAN_API_KEY }}" \
-        | jq -r '.collection' > collection.json
-
-  # 7. Run tests
-  - name: Run Newman
-    run: newman run collection.json
+      # 🧪 Run tests
+      - name: Run Newman
+        run: |
+          npx newman run collection.json
