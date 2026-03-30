@@ -1,0 +1,50 @@
+name: API Test (Postman Cloud)
+
+on:
+push:
+branches: [ main ]
+
+jobs:
+test:
+runs-on: ubuntu-latest
+
+```
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v3
+
+  # 1. Install Node (needed for your server + newman)
+  - name: Setup Node
+    uses: actions/setup-node@v3
+    with:
+      node-version: 18
+
+  # 2. Install dependencies (your auth app)
+  - name: Install dependencies
+    run: npm install
+
+  # 3. Start server in background
+  - name: Start server
+    run: |
+      node index.js &
+  
+  # 4. Wait until server is ready (better than sleep)
+  - name: Wait for server
+    run: |
+      npx wait-on http://localhost:3000
+
+  # 5. Install Newman
+  - name: Install Newman
+    run: npm install -g newman
+
+  # 6. Fetch collection from Postman Cloud
+  - name: Download Postman collection
+    run: |
+      curl --location \
+        --request GET "https://api.getpostman.com/collections/${{ secrets.POSTMAN_COLLECTION_UID }}" \
+        --header "X-Api-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+        | jq -r '.collection' > collection.json
+
+  # 7. Run tests
+  - name: Run Newman
+    run: newman run collection.json
